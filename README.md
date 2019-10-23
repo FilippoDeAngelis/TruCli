@@ -30,6 +30,7 @@ It is possible to add parameters, to give them as variables to our methods:
 from TruCli import Cli
 
 def hello(name):
+    """Greets a person."""
     print('Hello, ' + name)
     
 cli = Cli()
