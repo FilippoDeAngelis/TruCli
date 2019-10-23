@@ -47,12 +47,15 @@ class TruCli:
                 e.g. {'-v': {'arg_name': 'verbose', 'type': bool, 'default': False, 'help': 'More detailed outputs'}}"""
 
         mandatory_keys = ['arg_name', 'type'] # and either default or prompt
-        if all(key in mandatory_keys for key in params.keys()): # check if some mandatory keys are not there
-            raise Exception('Mandatory keys not found')
-        for key in params: # check if we are missing both default and prompt
-            if 'default' not in params[key].keys() and 'prompt' not in params[key].keys():
-                raise Exception('Params should include either a default or a prompt. ' + key + ' does not.')
-        params.update({'-help': {'arg_name': 'help', 'type': bool, 'default': False, 'help': 'Display this text'}})
+        if params is not None:
+            if all(key in mandatory_keys for key in params.keys()): # check if some mandatory keys are not there
+                raise Exception('Mandatory keys not found')
+            for key in params: # check if we are missing both default and prompt
+                if 'default' not in params[key].keys() and 'prompt' not in params[key].keys():
+                    raise Exception('Params should include either a default or a prompt. ' + key + ' does not.')
+            params.update({'-help': {'arg_name': 'help', 'type': bool, 'default': False, 'help': 'Display this text'}})
+        else:
+            params = {'-help': {'arg_name': 'help', 'type': bool, 'default': False, 'help': 'Display this text'}}
         self.__commands[name] = [func, params]
 
     def __parse(self, line: str) -> dict:
@@ -102,8 +105,13 @@ def hi(name):
     """Greets a person."""
     print('Hello ' + name)
 
+def hello():
+    """Print hello world"""
+    print('Hello World')
+
 if __name__ == '__main__':
     print('Initializing example code. Try the \'hello\' command!')
     cli = TruCli()
-    cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
+    #cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
+    cli.add_command('hello', hello)
     cli.run()
