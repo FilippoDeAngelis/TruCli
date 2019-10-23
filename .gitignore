@@ -1,3 +1,5 @@
 .idea
 venv
 core/__pycache__
+dist
+MANIFEST
