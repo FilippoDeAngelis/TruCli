@@ -1,5 +1,5 @@
 .idea
 venv
-core/__pycache__
+TruCli/__pycache__
 dist
 MANIFEST

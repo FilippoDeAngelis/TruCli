@@ -1,9 +1,7 @@
 from typing import Callable, Any, Dict, List
 import logging
 
-
-
-class TruCli:
+class Cli:
 
     def __init__(self):
         self.__commands = {}
