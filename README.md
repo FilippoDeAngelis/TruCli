@@ -10,12 +10,12 @@ pip install TruCli
 # Usage
 TruCli is very simple to use. Here is a Hello World example:
 ```
-import TruCli
+from TruCli import Cli
 
 def hello():
    print('Hello, World!')
   
-cli = TruCli()
+cli = Cli()
 cli.add_command('hello', hello)
 cli.run()
 ```
@@ -27,12 +27,12 @@ Hello, World!
 
 It is possible to add parameters, to give them as variables to our methods:
 ```
-import TruCli
+from TruCli import Cli
 
 def hello(name):
     print('Hello, ' + name)
     
-cli = TruCli()
+cli = Cli()
 cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
 cli.run()
 ```
