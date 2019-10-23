@@ -29,6 +29,9 @@ class TruCli:
                 if 'default' not in params[param_key].keys() and params[param_key]['arg_name'] not in tokens[1]:
                     # ask the user for the unspecified parameter and cast it to the proper type TODO: try...except for unconvertable inputs
                     tokens[1][params[param_key]['arg_name']] = params[param_key]['type'](input(params[param_key]['prompt'] + ': '))
+                elif params[param_key]['arg_name'] not in tokens[1]: # we have a default, so apply it
+                    tokens[1][params[param_key]['arg_name']] = params[param_key]['default']
+            del tokens[1]['help']
             ret = tokens[0](**tokens[1])
         if ret is not None:
             print(ret)
@@ -102,5 +105,5 @@ def hi(name):
 if __name__ == '__main__':
     print('Initializing example code. Try the \'hello\' command!')
     cli = TruCli()
-    cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'default': 'World', 'help': 'Specify the name to be greeted'}})
+    cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
     cli.run()
