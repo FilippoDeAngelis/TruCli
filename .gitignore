@@ -3,3 +3,4 @@ venv
 TruCli/__pycache__
 dist
 MANIFEST
+.DS_Store

@@ -5,6 +5,7 @@ class Cli:
 
     def __init__(self):
         self.__commands = {}
+        self.add_command('help', self.__help)
         self.prompt = '>'
 
     def run(self):
@@ -56,21 +57,35 @@ class Cli:
             params = {'-help': {'arg_name': 'help', 'type': bool, 'default': False, 'help': 'Display this text'}}
         self.__commands[name] = [func, params]
 
+    def __help(self):
+        """Display this text"""
+        to_ret = 'Available commands:\n\n'
+        for command in self.__commands:
+            if self.__commands[command][0].__doc__ is not None:
+                to_ret += command + ' -- ' + self.__commands[command][0].__doc__ + '\n'
+            else:
+                to_ret += command + '\n'
+        return to_ret
+
+
     def __parse(self, line: str) -> dict:
         tokens = line.split(' ')
         if not tokens[0] in self.__commands.keys():
             return None
         to_ret = [self.__commands[tokens[0]][0], {}] # [func, {arg_name1: arg1, arg_name2: arg2}]
-        for i in range(1, len(tokens), 2):
-            arg_name = self.__commands[tokens[0]][1][tokens[i]]['arg_name']
-            last_token = i >= len(tokens) - 1
-            if not last_token and tokens[i].startswith('-') and not tokens[i+1].startswith('-'): # the token is a flag and the next one is arg
-                to_ret[1].update({arg_name: tokens[i + 1]})
-            elif tokens[i].startswith('-'): # the token is a boolean
-                to_ret[1].update({arg_name: True})
-                i += 1
-            else:
-                return None
+        odd_spot = True # flags start at 1, but booleans only take one space. if you have a boolean you have to change to and from odd numbers
+        for i in range(1, len(tokens)):
+            if (odd_spot and i%2==1) or (not odd_spot and i%2==0): # if i should be odd and it is odd or viceversa
+                arg_name = self.__commands[tokens[0]][1][tokens[i]]['arg_name']
+                last_token = i >= len(tokens) - 1
+                if not last_token and tokens[i].startswith('-') and not tokens[i+1].startswith('-'): # the token is a flag and the next one is arg
+                    correct_type = self.__commands[tokens[0]][1][tokens[i]]['type']
+                    to_ret[1].update({arg_name: correct_type(tokens[i + 1])}) # cast the value to the appropriate type
+                elif tokens[i].startswith('-'): # the token is a boolean
+                    to_ret[1].update({arg_name: True})
+                    odd_spot = not odd_spot
+                else:
+                    return None
             # arg_name = self.__commands[tokens[0]][1][tokens[i]]
             # if arg_name is None:
             #     i += 1
@@ -81,7 +96,10 @@ class Cli:
     def __generate_help(self, name: str):
         """Generates a help page for 'name' functions"""
         func = self.__commands[name][0]
-        help_string = func.__doc__ + '\n\nParameters:\n'
+        if func.__doc__ is not None:
+            help_string = func.__doc__ + '\n\nParameters:\n'
+        else:
+            help_string = 'Parameters:\n'
         params = self.__commands[name][1]
         for key in params.keys():
             par_type = params[key]['type']
@@ -109,7 +127,7 @@ def hello():
 
 if __name__ == '__main__':
     print('Initializing example code. Try the \'hello\' command!')
-    cli = TruCli()
+    cli = Cli()
     #cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
     cli.add_command('hello', hello)
     cli.run()
