@@ -34,7 +34,8 @@ def hello(name):
     print('Hello, ' + name)
     
 cli = Cli()
-cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
+p = Param('-n', 'name', str, default='World', help='Specify the name to be greeted')
+cli.add_command('hello', hi, [p])
 cli.run()
 ```
 

@@ -220,9 +220,14 @@ def hi(name, count):
     for i in range(count):
         print('Hello ' + name)
 
+def hi_easy():
+    print('Hello World!')
+
 
 if __name__ == '__main__':
     print('Initializing example code. Try the \'hello\' command!')
     cli = Cli()
-    cli.add_command('hello', hi, [MainParam('name', str, help='The Name to be greeted'), Param('-c', 'count', int, default=1, help='How many times to greet')])
+    cli.add_command('ez', hi_easy)
+    cli.add_command('hello', hi, [MainParam('name', str, help='The Name to be greeted'),
+                                  Param('-c', 'count', int, default=1, help='How many times to greet')])
     cli.run()
