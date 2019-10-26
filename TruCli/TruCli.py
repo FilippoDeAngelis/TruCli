@@ -15,7 +15,11 @@ class Cli:
     def main_loop(self):
         line = input(self.prompt)
         name = line.split(' ')[0]
-        tokens = self.__parse(line)
+        try:
+            tokens = self.__parse(line)
+        except Exception as e:
+            print(e)
+            return
         logging.debug('Tokens: ' + str(tokens))
         if tokens is None:
             print(line + ': Could not parse command.')
@@ -26,8 +30,12 @@ class Cli:
             params = self.__commands[name][1] # get all parameters in the specified command
             for param_key in params: # check if a parameter with no default hasn't been specified
                 if 'default' not in params[param_key].keys() and params[param_key]['arg_name'] not in tokens[1]:
-                    # ask the user for the unspecified parameter and cast it to the proper type TODO: try...except for unconvertable inputs
-                    tokens[1][params[param_key]['arg_name']] = params[param_key]['type'](input(params[param_key]['prompt'] + ': '))
+                    param = input(params[param_key]['prompt'] + ': ')
+                    try:
+                        tokens[1][params[param_key]['arg_name']] = params[param_key]['type'](param)
+                    except ValueError:
+                        print(param + ' is not a ' + params[param_key]['type'].__name__)
+                        return
                 elif params[param_key]['arg_name'] not in tokens[1]: # we have a default, so apply it
                     tokens[1][params[param_key]['arg_name']] = params[param_key]['default']
             del tokens[1]['help']
@@ -80,7 +88,10 @@ class Cli:
                 last_token = i >= len(tokens) - 1
                 if not last_token and tokens[i].startswith('-') and not tokens[i+1].startswith('-'): # the token is a flag and the next one is arg
                     correct_type = self.__commands[tokens[0]][1][tokens[i]]['type']
-                    to_ret[1].update({arg_name: correct_type(tokens[i + 1])}) # cast the value to the appropriate type
+                    try:
+                        to_ret[1].update({arg_name: correct_type(tokens[i + 1])}) # cast the value to the appropriate type
+                    except ValueError:
+                        raise Exception(str(tokens[i + 1]) + ' is not a valid ' + correct_type.__name__)
                 elif tokens[i].startswith('-'): # the token is a boolean
                     to_ret[1].update({arg_name: True})
                     odd_spot = not odd_spot
@@ -119,15 +130,10 @@ class Cli:
 
 def hi(name):
     """Greets a person."""
-    print('Hello ' + name)
-
-def hello():
-    """Print hello world"""
-    print('Hello World')
+    print('Hello ' + str(name))
 
 if __name__ == '__main__':
     print('Initializing example code. Try the \'hello\' command!')
     cli = Cli()
-    #cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
-    cli.add_command('hello', hello)
+    cli.add_command('hello', hi, {'-n': {'arg_name': 'name', 'type': str, 'default': 'World', 'help': 'Specify the name to be greeted'}})
     cli.run()

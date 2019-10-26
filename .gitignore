@@ -4,3 +4,5 @@ TruCli/__pycache__
 dist
 MANIFEST
 .DS_Store
+main.py
+pip_upload.sh
