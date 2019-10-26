@@ -21,10 +21,29 @@ class Param:
         # either one of the following must be set
         self.prompt = prompt
         self.default = default
-        if prompt is None and default is None:
-            raise Exception('Either prompt or default must be defined. Both were None.')
         # optional params
         self.help = help
+
+        # conditions to be satisfied
+        if prompt is None and default is None:
+            raise Exception('Either prompt or default must be defined. Both were None.')
+        if not flag.startswith('-') and not flag.startswith('_'):
+            raise Exception('Flags must start with a dash (-)')
+
+
+class MainParam(Param):
+
+    def __init__(self, arg_name: str, typ: type, help: str = None):
+        """The main parameter for a command.
+
+        Arguments:
+            arg_name -- the name of the corresponding parameter in the function
+            typ -- the type of the corresponding parameter in the function, cannot be bool
+            help -- the help text for the param"""
+        if typ.__name__ == 'bool':
+            raise Exception('Main Parameter cannot be boolean')
+        super().__init__('__main__', arg_name, typ, prompt='', help=help)
+        self.prompt = None
 
 
 class Cli:
@@ -75,11 +94,20 @@ class Cli:
             name -- The name of the command. Represent how it will be called from the command line
             func -- The function that will be executed when the command is called
             params -- A list of objects Param representing the params for the command"""
+        # Check that there is not more than one main param
+
         help_param = Param('-help', 'help', bool, default=False, help='Display this text')
         if params is not None:
             params.append(help_param)
         else:
             params = [help_param]
+        main_found = False
+        for param in params:
+            if param.flag == '__main__':
+                if main_found:
+                    raise Exception('Multiple main params found. Only one allowed')
+                else:
+                    main_found = True
         self.__commands[name] = [func, params]
 
     def __help(self):
@@ -97,6 +125,17 @@ class Cli:
         if not tokens[0] in self.__commands.keys():
             return None
         to_ret = [self.__commands[tokens[0]][0], {}] # [func, {arg_name1: arg1, arg_name2: arg2}]
+
+        # Check if the user is asking for help
+        if len(tokens) > 1 and tokens[1] == '-help':
+            to_ret[1].update({'help': True})
+            return to_ret
+
+        # Check if this command has a main arg and if it does assign it
+        if self.__has_main_param(tokens[0]):
+            main_par = self.__get_main_param(tokens[0])
+            to_ret[1].update({main_par.arg_name: tokens.pop(1)})
+
         odd_spot = True # flags start at 1, but booleans only take one space. if you have a boolean you have to change to and from odd numbers
         for i in range(1, len(tokens)):
             if (odd_spot and i%2==1) or (not odd_spot and i%2==0): # if i should be odd and it is odd or viceversa
@@ -125,11 +164,27 @@ class Cli:
         """Generates a help page for 'name' functions"""
         func = self.__commands[name][0]
         if func.__doc__ is not None:
-            help_string = func.__doc__ + '\n\nParameters:\n'
+            help_string = func.__doc__ + '\n\nSyntax:\n'
         else:
-            help_string = 'Parameters:\n'
+            help_string = 'Syntax:\n'
+
         params = self.__commands[name][1]
+        if self.__has_main_param(name):
+            has_main = True
+            help_string += name + ' MAIN_PARAM [flag(s)]'
+        else:
+            has_main = False
+            help_string += name + ' [flag(s)]'
+
+        help_string += '\n\nParameters:\n'
+        if has_main:
+            param = self.__get_main_param(name)
+            help = param.help if param.help is not None else self.__generate_missing_help_string(param)
+            help_string += 'MAIN_PARAM ' + param.typ.__name__ + ' -- ' + help + '\n'
+
         for param in params:
+            if param.flag == '__main__':
+                continue
             par_type = param.typ.__name__ if param.typ != bool else ''
             if param.help is not None:
                 help_string += param.flag + ' ' + par_type + ' -- ' + param.help + '\n'
@@ -147,17 +202,27 @@ class Cli:
                 return param
         return None
 
+    def __has_main_param(self, command_name: str) -> bool:
+        return self.__get_main_param(command_name) is not None
+
+    def __get_main_param(self, command_name: str) -> Param:
+        for param in self.__commands[command_name][1]:
+            if param.flag == '__main__':
+                return param
+        return None
+
 
 # Example Code =====================================================
 
 
-def hi(name):
+def hi(name, count):
     """Greets a person."""
-    print('Hello ' + str(name))
+    for i in range(count):
+        print('Hello ' + name)
 
 
 if __name__ == '__main__':
     print('Initializing example code. Try the \'hello\' command!')
     cli = Cli()
-    cli.add_command('hello', hi, [Param('-n', 'name', str, prompt='Please enter a name', help='The name to be greeted')])
+    cli.add_command('hello', hi, [MainParam('name', str, help='The Name to be greeted'), Param('-c', 'count', int, default=1, help='How many times to greet')])
     cli.run()
