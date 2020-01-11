@@ -2,13 +2,13 @@ from distutils.core import setup
 setup(
   name = 'TruCli',         # How you named your package folder (MyLib)
   packages = ['TruCli'],   # Chose the same as "name"
-  version = '0.2',      # Start with a small number and increase it with every change you make
+  version = '0.3',      # Start with a small number and increase it with every change you make
   license='GNU GPLv3',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'A small library to create CLIs fully contained in Python',   # Give a short desscription about your library
   author = 'Filippo De Angelis',                   # Type in your name
   author_email = 'filippodeangelis0@gmail.com',      # Type in your E-Mail
   url = 'https://github.com/FilippoDeAngelis/TruCli',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/FilippoDeAngelis/TruCli/archive/v0.2.tar.gz',
+  download_url = 'https://github.com/FilippoDeAngelis/TruCli/archive/v0.3.tar.gz',
   keywords = ['CLI', 'CONTAINER', 'INSIDE'],
   install_requires = [
     'typing'

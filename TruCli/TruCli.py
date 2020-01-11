@@ -50,6 +50,7 @@ class Cli:
 
     def __init__(self):
         self.__commands = {}
+        self.max_tabs = 1
         self.add_command('help', self.__help)
         self.prompt = '>'
 
@@ -103,6 +104,7 @@ class Cli:
             params = [help_param]
         main_found = False
         for param in params:
+            self.__refresh_max_tabs(param)
             if param.flag == '__main__':
                 if main_found:
                     raise Exception('Multiple main params found. Only one allowed')
@@ -180,16 +182,16 @@ class Cli:
         if has_main:
             param = self.__get_main_param(name)
             help = param.help if param.help is not None else self.__generate_missing_help_string(param)
-            help_string += 'MAIN_PARAM ' + param.typ.__name__ + ' -- ' + help + '\n'
+            help_string += 'MAIN_PARAM ' + param.typ.__name__ + self.__get_tabs(param) + ' -- ' + help + '\n'
 
         for param in params:
             if param.flag == '__main__':
                 continue
             par_type = param.typ.__name__ if param.typ != bool else ''
             if param.help is not None:
-                help_string += param.flag + ' ' + par_type + ' -- ' + param.help + '\n'
+                help_string += param.flag + ' ' + par_type + self.__get_tabs(param) + ' -- ' + param.help + '\n'
             else:
-                help_string += param.flag + ' ' + par_type + ' -- ' + self.__generate_missing_help_string(param) + '\n'
+                help_string += param.flag + ' ' + par_type + self.__get_tabs(param) + ' -- ' + self.__generate_missing_help_string(param) + '\n'
 
         return help_string
 
@@ -211,6 +213,29 @@ class Cli:
                 return param
         return None
 
+    def __get_tabs(self, param: Param):
+        """Returns the appropriate amount of tabs a param needs for proper alignment of the help page"""
+        tab_count = self.__get_tab_count(param)
+        difference = self.max_tabs - tab_count + 1
+        return "\t" * difference
+
+    def __refresh_max_tabs(self, param: Param):
+        """Updates self.max_tabs for use during the generation of the help page"""
+        if self.max_tabs < self.__get_tab_count(param):
+            self.max_tabs = self.__get_tab_count(param)
+
+    def __get_tab_count(self, param: Param):
+        """Returns the number of the appropriate amount of tabs for alignment of the help page"""
+        if param.flag == "__main__":
+            flag_length = len("MAIN PARAM")
+        else:
+            flag_length = len(param.flag)
+        type_length = len(param.typ.__name__ if param.typ != bool else '')
+        total_length = flag_length + type_length + 1  # there's a space between them
+        tab_count = int(total_length / 4)
+        if total_length % 4 == 0:  # if it's a multiple of 4 it needs an extra tab
+            tab_count += 1
+        return tab_count
 
 # Example Code =====================================================
 
@@ -229,5 +254,5 @@ if __name__ == '__main__':
     cli = Cli()
     cli.add_command('ez', hi_easy)
     cli.add_command('hello', hi, [MainParam('name', str, help='The Name to be greeted'),
-                                  Param('-c', 'count', int, default=1, help='How many times to greet')])
+                                  Param('-counting', 'count', int, default=1, help='How many times to greet')])
     cli.run()
