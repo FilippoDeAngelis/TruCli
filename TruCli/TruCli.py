@@ -48,11 +48,11 @@ class MainParam(Param):
 
 class Cli:
 
-    def __init__(self):
+    def __init__(self, cursor='>'):
         self.__commands = {}
         self.max_tabs = 1
         self.add_command('help', self.__help)
-        self.prompt = '>'
+        self.prompt = cursor
 
     def run(self):
         while True:
